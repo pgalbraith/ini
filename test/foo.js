@@ -116,3 +116,22 @@ test('strict encode fails on problematic multiline entry', function (t) {
   t.throws(() => i.encode(obj, { strictMultiline: true }))
   t.end()
 })
+
+test('strict encode fails on array entry with unindented newline', function (t) {
+  t.throws(() => i.encode({ list: ['a\nb'] }), /Array entry value/)
+  t.end()
+})
+
+test('legacy encode quotes array entry with unindented newline', function (t) {
+  const e = i.encode({ list: ['a\nb'] }, { strictMultiline: false })
+  t.same(e.split(/\r?\n/), ['list[]="a\\nb"', ''])
+  t.end()
+})
+
+test('carriage return is never written as a continuation line', function (t) {
+  const obj = { key: 'a\r\n b', list: ['c\r\n d'] }
+  t.throws(() => i.encode(obj), /carriage return/)
+  const e = i.encode(obj, { strictMultiline: false })
+  t.same(e.split(/\r?\n/), ['key="a\\r\\n b"', 'list[]="c\\r\\n d"', ''])
+  t.end()
+})

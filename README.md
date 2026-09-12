@@ -177,9 +177,11 @@ stringify(object,{
      *  that contain literal newlines.
      *
      *  When `true` (default), `stringify()` throws if any line after
-     *  the first does not start with a space or tab. This protects
-     *  against accidentally emitting multiline INI values that other
-     *  parsers cannot safely read.
+     *  the first does not start with a space or tab, or if the value
+     *  contains a carriage return (only LF line breaks can be written
+     *  as continuation lines). This protects against accidentally
+     *  emitting multiline INI values that other parsers cannot safely
+     *  read.
      *
      *  Set to `false` to fall back to JSON-quoted output for those
      *  values (the legacy behavior prior to multiline support).

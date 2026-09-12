@@ -9,7 +9,7 @@ exports[`test/foo.js TAP decode from file > must match snapshot 1`] = `
 Null Object {
   " xa  n          p ": String(
     "r
-     oyoyor\\r
+     oyoyor
     
   ),
   "[disturbing]": "hey you never know",
@@ -125,7 +125,7 @@ exports[`test/foo.js TAP decode from file with multiline disabled > must match s
 Null Object {
   " xa  n          p ": String(
     "r
-     oyoyor\\r
+     oyoyor
     
   ),
   "[disturbing]": "hey you never know",

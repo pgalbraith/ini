@@ -47,6 +47,7 @@ const config = parse(text)
 
 config.scope = 'local'
 config.database.database = 'use_another_database'
+config.database.description = 'this is a multiline\n  value -- continuation lines\n  must be indented'
 config.paths.default.tmpdir = '/tmp'
 delete config.paths.default.datadir
 config.paths.default.array.push('fourth value')
@@ -71,9 +72,9 @@ scope=local
 user=dbuser
 password=dbpassword
 database=use_another_database
-description=this is a multiline 
-  value -- continuation lines for multiline
-  values must be indented
+description=this is a multiline
+  value -- continuation lines
+  must be indented
 [section.paths.default]
 tmpdir=/tmp
 array[]=first value
@@ -92,11 +93,12 @@ Attempts to turn the given INI string into a nested data object.
 // You can also use `decode`
 const object = parse(`<INI Text>`, {
   /**
-   * Interpret indented lines that immediately follow key/value pairs
-   * as multiline continuations. Enabled by default for backwards
-   * compatibility with the Node.js parser this module replaces.
+   * Read indented lines that directly follow a key/value pair as
+   * continuation lines of that value, the way Python's configparser
+   * does. Enabled by default; see "Multiline values" below.
    *
-   * Set to `false` to treat those indented lines as standalone keys.
+   * Set to `false` to read those indented lines as standalone keys,
+   * which is how versions before multiline support read them.
    */
   multiline: true,
 
@@ -173,20 +175,16 @@ stringify(object,{
     bracketedArray : true,
 
     /**
-     *  Enforce indentation on continuation lines for string values
-     *  that contain literal newlines.
+     *  A string value containing newlines is written as indented
+     *  continuation lines when `parse()` can read it back unchanged
+     *  (see "Multiline values" below), and JSON-quoted otherwise,
+     *  as before multiline support.
      *
-     *  When `true` (default), `stringify()` throws if any line after
-     *  the first does not start with a space or tab, or if the value
-     *  contains a carriage return (only LF line breaks can be written
-     *  as continuation lines). This protects against accidentally
-     *  emitting multiline INI values that other parsers cannot safely
-     *  read.
-     *
-     *  Set to `false` to fall back to JSON-quoted output for those
-     *  values (the legacy behavior prior to multiline support).
+     *  Set to `true` to have `stringify()` throw instead of falling
+     *  back to JSON quoting, for output that must stay readable by
+     *  parsers that do not understand quoted values.
      */
-    strictMultiline : true
+    strictMultiline : false
 
 })
 ```
@@ -197,6 +195,25 @@ stringify(object,{
 ```js
 stringify(object,'section')
 ```
+
+### Multiline values
+
+A value continues onto the following lines when each of them starts with
+a space or tab. The continuation lines are kept verbatim, indentation
+included, joined with `\n`:
+
+```ini
+description=first line
+  second line
+	third line
+```
+
+`parse()` ends the value at a blank line, a section header, or any line
+that is not indented, and skips comment lines in between. `stringify()`
+writes a value this way only when every line after the first is indented,
+is not blank, contains no `=`, and does not start with `;` or `#`, and the
+value contains no carriage return. Any other value with newlines is
+JSON-quoted, so `parse(stringify(x))` gives back `x` either way.
 
 ### Un / Escape
 

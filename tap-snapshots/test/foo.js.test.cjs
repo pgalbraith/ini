@@ -8,8 +8,8 @@
 exports[`test/foo.js TAP decode from file > must match snapshot 1`] = `
 Null Object {
   " xa  n          p ": String(
-    "r
-     oyoyor
+    "\\r
+    yoyoyo\\r\\r
     
   ),
   "[disturbing]": "hey you never know",
@@ -58,13 +58,17 @@ Null Object {
       ),
     },
     "array": Null Object {
-      "good": true,
-      "line2": true,
-      "line3": true,
       "list": Array [
         "item1",
-        "line1",
-        "ok",
+        String(
+          line1
+            line2
+          \\tline3
+        ),
+        String(
+          ok
+            good
+        ),
         String(
           good
            indented
@@ -124,8 +128,8 @@ Null Object {
 exports[`test/foo.js TAP decode from file with multiline disabled > must match snapshot 1`] = `
 Null Object {
   " xa  n          p ": String(
-    "r
-     oyoyor
+    "\\r
+    yoyoyo\\r\\r
     
   ),
   "[disturbing]": "hey you never know",
@@ -234,9 +238,7 @@ Null Object {
 exports[`test/foo.js TAP encode from data > must match snapshot 1`] = `
 o=p
 a with spaces=b  c
-" xa  n          p "="r
- oyoyor
-
+" xa  n          p "="\\"\\r\\nyoyoyo\\r\\r\\n"
 "[disturbing]"=hey you never know
 s=something
 s1="something'
@@ -312,21 +314,19 @@ d2=done
 [multiline.array]
 list[]=item1
 list[]=line1
+  line2
+	line3
 list[]=ok
+  good
 list[]=good
  indented
-line2=true
-line3=true
-good=true
 
 `
 
 exports[`test/foo.js TAP encode with align > must match snapshot 1`] = `
 o                    = p
 a with spaces        = b  c
-" xa  n          p " = "r
- oyoyor
-
+" xa  n          p " = "\\"\\r\\nyoyoyo\\r\\r\\n"
 "[disturbing]"       = hey you never know
 s                    = something
 s1                   = "something'
@@ -402,19 +402,17 @@ d2     = done
 [multiline.array]
 list[] = item1
 list[] = line1
+  line2
+	line3
 list[] = ok
+  good
 list[] = good
  indented
-line2  = true
-line3  = true
-good   = true
 
 `
 
 exports[`test/foo.js TAP encode with align and sort > must match snapshot 1`] = `
-" xa  n          p " = "r
- oyoyor
-
+" xa  n          p " = "\\"\\r\\nyoyoyo\\r\\r\\n"
 "[disturbing]"       = hey you never know
 a with spaces        = b  c
 ar[]                 = one
@@ -463,12 +461,12 @@ two  = first
   second
 
 [multiline.array]
-good   = true
-line2  = true
-line3  = true
 list[] = item1
 list[] = line1
+  line2
+	line3
 list[] = ok
+  good
 list[] = good
  indented
 
@@ -536,9 +534,7 @@ Array [
 `
 
 exports[`test/foo.js TAP encode with sort > must match snapshot 1`] = `
-" xa  n          p "="r
- oyoyor
-
+" xa  n          p "="\\"\\r\\nyoyoyo\\r\\r\\n"
 "[disturbing]"=hey you never know
 a with spaces=b  c
 ar[]=one
@@ -587,12 +583,12 @@ two=first
   second
 
 [multiline.array]
-good=true
-line2=true
-line3=true
 list[]=item1
 list[]=line1
+  line2
+	line3
 list[]=ok
+  good
 list[]=good
  indented
 

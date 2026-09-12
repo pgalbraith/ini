@@ -117,21 +117,62 @@ test('strict encode fails on problematic multiline entry', function (t) {
   t.end()
 })
 
-test('strict encode fails on array entry with unindented newline', function (t) {
-  t.throws(() => i.encode({ list: ['a\nb'] }), /Array entry value/)
+// Every value here is one the verbatim continuation form cannot carry, so
+// encode() falls back to JSON quoting: parse(stringify(x)) must still be x,
+// and strictMultiline must reject the value instead.
+const quoted = {
+  'unindented line': ['line1\nline2', '"line1\\nline2"'],
+  'carriage return': ['a\r\n b', '"a\\r\\n b"'],
+  'blank line inside the value': ['x\n\n y', '"x\\n\\n y"'],
+  'whitespace-only line': ['x\n \n y', '"x\\n \\n y"'],
+  'trailing newline': ['x\n y\n', '"x\\n y\\n"'],
+  'equals sign in a continuation line': ['x\n y=z', '"x\\n y=z"'],
+  'comment-looking continuation line': ['x\n ;y', '"x\\n ;y"'],
+}
+
+for (const [name, [value, expected]] of Object.entries(quoted)) {
+  test(`quoted fallback: ${name}`, function (t) {
+    const obj = { k: value, list: [value] }
+    const e = i.encode(obj)
+    t.same(e.split(/\r?\n/), [`k=${expected}`, `list[]=${expected}`, ''])
+    t.same(i.decode(e), obj, 'round trip')
+    t.throws(() => i.encode(obj, { strictMultiline: true }), /continuation lines/)
+    t.end()
+  })
+}
+
+// Values the verbatim form can carry, including a first line that needs
+// escaping and array entries.
+test('continuation lines round trip', function (t) {
+  const obj = {
+    semi: 'x;y\n z',
+    quoted: '"q"\n y',
+    empty: '\n x',
+    list: ['a\n b', 'c\n\td'],
+  }
+  const e = i.encode(obj)
+  t.same(e.split(/\r?\n/), [
+    'semi=x\\;y', ' z',
+    'quoted="\\"q\\""', ' y',
+    'empty=', ' x',
+    'list[]=a', ' b',
+    'list[]=c', '\td',
+    '',
+  ])
+  t.same(i.decode(e), obj, 'round trip')
   t.end()
 })
 
-test('legacy encode quotes array entry with unindented newline', function (t) {
-  const e = i.encode({ list: ['a\nb'] }, { strictMultiline: false })
-  t.same(e.split(/\r?\n/), ['list[]="a\\nb"', ''])
+test('decode: what ends a continuation', function (t) {
+  t.same(i.decode('a=x\n y\n\n z'), { a: 'x\n y', z: true }, 'blank line')
+  t.same(i.decode('a=x\n y\n[s]\n z'), { a: 'x\n y', s: { z: true } }, 'section header')
+  t.same(i.decode('a=x\n y\n=junk\n z'), { a: 'x\n y', z: true }, 'unparseable line')
+  t.same(i.decode('a=x\n ; c\n y'), { a: 'x\n y' }, 'a comment does not')
   t.end()
 })
 
-test('carriage return is never written as a continuation line', function (t) {
-  const obj = { key: 'a\r\n b', list: ['c\r\n d'] }
-  t.throws(() => i.encode(obj), /carriage return/)
-  const e = i.encode(obj, { strictMultiline: false })
-  t.same(e.split(/\r?\n/), ['key="a\\r\\n b"', 'list[]="c\\r\\n d"', ''])
+test('decode: array entries continue', function (t) {
+  t.same(i.decode('a[]=x\n y\na[]=z\n w'), { a: ['x\n y', 'z\n w'] })
+  t.same(i.decode('a=x\n y\na=z\n w', { bracketedArray: false }), { a: ['x\n y', 'z\n w'] })
   t.end()
 })
